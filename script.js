@@ -176,6 +176,7 @@ function setupDateInput() {
    PLAYFUL "NO" BUTTON (FULL-SCREEN DODGE)
    ============================================================ */
 function setupInviteButtons() {
+  const container = $("#invite-buttons");
   const noBtn = $("#no-btn");
   const yesBtn = $("#yes-btn");
   const hint = $("#invite-hint");
@@ -187,22 +188,28 @@ function setupInviteButtons() {
     "Last chance to say yes... 💕",
   ];
 
-  // Make it unclickable and roam anywhere in viewport
-  noBtn.style.position = "fixed";
-  noBtn.style.zIndex = "9999";
-  noBtn.style.left = "50%";
-  noBtn.style.top = "70%";
-  noBtn.style.transform = "translate(-50%, -50%)";
-  noBtn.style.willChange = "left, top, transform";
-
   let hintIndex = 0;
-  let hintTimer = null;
-  let btnX = window.innerWidth * 0.5;
-  let btnY = window.innerHeight * 0.7;
-  const margin = 12;
+  const triggerRadius = 100; // px distance from cursor to NO button center before it dodges
+  const dodgeStep = 140;     // how far it jumps each dodge
+  const margin = 10;         // viewport edge margin
+  let started = false;
 
-  function setNoPosition(x, y) {
-    const rect = noBtn.getBoundingClientRect();
+  // Keep No near Yes initially (your default layout), then switch to fixed only after first dodge
+  noBtn.style.position = "relative";
+  noBtn.style.left = "0px";
+  noBtn.style.top = "0px";
+  noBtn.style.transform = "none";
+  noBtn.style.zIndex = "9999";
+
+  function cycleHint() {
+    hint.textContent = hints[hintIndex % hints.length];
+    hintIndex++;
+  }
+
+  const hintTimer = setInterval(cycleHint, 2000);
+  cycleHint();
+
+  function clampToViewport(centerX, centerY, rect) {
     const halfW = rect.width / 2;
     const halfH = rect.height / 2;
 
@@ -211,13 +218,86 @@ function setupInviteButtons() {
     const minY = margin + halfH;
     const maxY = window.innerHeight - margin - halfH;
 
-    btnX = Math.min(maxX, Math.max(minX, x));
-    btnY = Math.min(maxY, Math.max(minY, y));
-
-    noBtn.style.left = `${btnX}px`;
-    noBtn.style.top = `${btnY}px`;
-    noBtn.style.transform = "translate(-50%, -50%)";
+    return {
+      x: Math.min(maxX, Math.max(minX, centerX)),
+      y: Math.min(maxY, Math.max(minY, centerY)),
+    };
   }
+
+  function ensureFixedAtCurrentSpot() {
+    if (started) return;
+    const rect = noBtn.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    noBtn.style.position = "fixed";
+    noBtn.style.left = `${centerX}px`;
+    noBtn.style.top = `${centerY}px`;
+    noBtn.style.transform = "translate(-50%, -50%)";
+    started = true;
+  }
+
+  function dodgeFrom(cursorX, cursorY) {
+    if (reduceMotion) return;
+
+    ensureFixedAtCurrentSpot();
+
+    const rect = noBtn.getBoundingClientRect();
+    const btnX = rect.left + rect.width / 2;
+    const btnY = rect.top + rect.height / 2;
+
+    const dx = btnX - cursorX;
+    const dy = btnY - cursorY;
+    const dist = Math.hypot(dx, dy);
+
+    // Only move when cursor is inside trigger radius
+    if (dist > triggerRadius) return;
+
+    const nx = (dx || 1) / (dist || 1); // away direction X
+    const ny = (dy || 1) / (dist || 1); // away direction Y
+
+    // opposite-direction jump + slight random jitter
+    const jitterX = (Math.random() * 30) - 15;
+    const jitterY = (Math.random() * 30) - 15;
+
+    const target = clampToViewport(
+      btnX + nx * dodgeStep + jitterX,
+      btnY + ny * dodgeStep + jitterY,
+      rect
+    );
+
+    noBtn.style.left = `${target.x}px`;
+    noBtn.style.top = `${target.y}px`;
+  }
+
+  function onPointerMove(e) {
+    dodgeFrom(e.clientX, e.clientY);
+  }
+
+  container.addEventListener("pointermove", onPointerMove);
+  document.addEventListener("pointermove", onPointerMove);
+
+  // Make NO unclickable
+  const blockNo = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const x = e.clientX ?? (e.touches?.[0]?.clientX ?? window.innerWidth / 2);
+    const y = e.clientY ?? (e.touches?.[0]?.clientY ?? window.innerHeight / 2);
+    dodgeFrom(x, y);
+  };
+
+  noBtn.addEventListener("pointerdown", blockNo);
+  noBtn.addEventListener("click", blockNo);
+  noBtn.addEventListener("touchstart", blockNo, { passive: false });
+
+  yesBtn.addEventListener("click", () => {
+    clearInterval(hintTimer);
+    container.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointermove", onPointerMove);
+    hint.textContent = "";
+    goTo("cuisine");
+  });
+}
 
   function moveAwayFrom(pointerX, pointerY) {
     if (reduceMotion) return;
