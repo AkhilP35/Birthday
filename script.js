@@ -2,11 +2,11 @@
    ✏️  EDIT THIS SECTION — everything you need to personalise
    ============================================================ */
 const CONFIG = {
-  girlfriendName: "My Love",           // shown on the cover screen
+  girlfriendName: "Kaviniy",           // shown on the cover screen
   personalMessage:
     "I've really loved every moment we've spent together lately, and I " +
-    "wanted to do something a little different for your birthday this " +
-    "year. So... I built you this. Ready?",
+    "wanted to do something a bit more creative for your birthday this " +
+    "year. So I built you this...",
 
   // Our story — replace the emoji + caption with real photos if you like.
   // To use a real photo instead of an emoji, swap the <span class="emoji">
