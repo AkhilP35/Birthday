@@ -2,7 +2,7 @@
    ✏️  EDIT THIS SECTION — everything you need to personalise
    ============================================================ */
 const CONFIG = {
-  girlfriendName: "Kaviniy",           // shown on the cover screen
+  girlfriendName: "Kaviniy", // shown on the cover screen
   personalMessage:
     "I've really loved every moment we've spent together lately, and I " +
     "wanted to do something a bit more creative for your birthday this " +
@@ -20,15 +20,15 @@ const CONFIG = {
 
   // Leave restaurant blank if you want it to stay a surprise until dinner —
   // it will simply say "my little secret" on the ticket.
-  restaurantName: "",          // e.g. "Bella Notte"
-  restaurantAddress: "",       // e.g. "12 High Street, Perth"
+  restaurantName: "", // e.g. "Bella Notte"
+  restaurantAddress: "", // e.g. "12 High Street, Perth"
   pickupNote: "I'll pick you up ❤️",
 
   // --- Getting her answers -----------------------------------------
   // Option A: Discord webhook (Server Settings → Integrations → Webhooks)
-  discordWebhookUrl: "",       // e.g. "https://discord.com/api/webhooks/..."
+  discordWebhookUrl: "", // e.g. "https://discord.com/api/webhooks/..."
   // Option B: Google Sheets via Apps Script (see README.md for setup)
-  sheetsWebAppUrl: "",         // e.g. "https://script.google.com/macros/s/.../exec"
+  sheetsWebAppUrl: "", // e.g. "https://script.google.com/macros/s/.../exec"
 
   confettiColors: ["#ff6fa8", "#b24bf3", "#ff9a56", "#ffd166", "#ffffff"],
 };
@@ -128,7 +128,7 @@ function spawnHearts() {
     const size = 14 + Math.random() * 18;
     const dur = 10 + Math.random() * 10;
     const delay = Math.random() * 14;
-    const drift = (Math.random() * 80 - 40) + "px";
+    const drift = Math.random() * 80 - 40 + "px";
     span.style.left = left + "vw";
     span.style.setProperty("--size", size + "px");
     span.style.setProperty("--dur", dur + "s");
@@ -173,7 +173,10 @@ function setupDateInput() {
 }
 
 /* ============================================================
-   PLAYFUL "NO" BUTTON (FULL-SCREEN DODGE)
+   PLAYFUL "NO" BUTTON
+   - Starts next to Yes button
+   - Only moves when cursor enters trigger radius
+   - Moves opposite direction
    ============================================================ */
 function setupInviteButtons() {
   const container = $("#invite-buttons");
@@ -189,12 +192,12 @@ function setupInviteButtons() {
   ];
 
   let hintIndex = 0;
-  const triggerRadius = 100; // px distance from cursor to NO button center before it dodges
-  const dodgeStep = 140;     // how far it jumps each dodge
-  const margin = 10;         // viewport edge margin
+  const triggerRadius = 100; // px
+  const dodgeStep = 140; // px
+  const margin = 10; // viewport safe margin
   let started = false;
 
-  // Keep No near Yes initially (your default layout), then switch to fixed only after first dodge
+  // Start in normal flow beside yes button
   noBtn.style.position = "relative";
   noBtn.style.left = "0px";
   noBtn.style.top = "0px";
@@ -206,8 +209,8 @@ function setupInviteButtons() {
     hintIndex++;
   }
 
-  const hintTimer = setInterval(cycleHint, 2000);
   cycleHint();
+  const hintTimer = setInterval(cycleHint, 2000);
 
   function clampToViewport(centerX, centerY, rect) {
     const halfW = rect.width / 2;
@@ -250,15 +253,14 @@ function setupInviteButtons() {
     const dy = btnY - cursorY;
     const dist = Math.hypot(dx, dy);
 
-    // Only move when cursor is inside trigger radius
+    // Move ONLY if cursor is inside radius
     if (dist > triggerRadius) return;
 
-    const nx = (dx || 1) / (dist || 1); // away direction X
-    const ny = (dy || 1) / (dist || 1); // away direction Y
+    const nx = (dx || 1) / (dist || 1);
+    const ny = (dy || 1) / (dist || 1);
 
-    // opposite-direction jump + slight random jitter
-    const jitterX = (Math.random() * 30) - 15;
-    const jitterY = (Math.random() * 30) - 15;
+    const jitterX = Math.random() * 30 - 15;
+    const jitterY = Math.random() * 30 - 15;
 
     const target = clampToViewport(
       btnX + nx * dodgeStep + jitterX,
@@ -277,7 +279,7 @@ function setupInviteButtons() {
   container.addEventListener("pointermove", onPointerMove);
   document.addEventListener("pointermove", onPointerMove);
 
-  // Make NO unclickable
+  // Prevent clicking no
   const blockNo = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -293,68 +295,6 @@ function setupInviteButtons() {
   yesBtn.addEventListener("click", () => {
     clearInterval(hintTimer);
     container.removeEventListener("pointermove", onPointerMove);
-    document.removeEventListener("pointermove", onPointerMove);
-    hint.textContent = "";
-    goTo("cuisine");
-  });
-}
-
-  function moveAwayFrom(pointerX, pointerY) {
-    if (reduceMotion) return;
-
-    const dx = btnX - pointerX;
-    const dy = btnY - pointerY;
-    const dist = Math.hypot(dx, dy) || 1;
-
-    // Normalize direction away from cursor
-    const nx = dx / dist;
-    const ny = dy / dist;
-
-    // Big jump + jitter so it can move all around the screen
-    const jump = 140;
-    const jitterX = (Math.random() * 120) - 60;
-    const jitterY = (Math.random() * 120) - 60;
-
-    const nextX = btnX + nx * jump + jitterX;
-    const nextY = btnY + ny * jump + jitterY;
-
-    setNoPosition(nextX, nextY);
-  }
-
-  function cycleHint() {
-    hint.textContent = hints[hintIndex % hints.length];
-    hintIndex++;
-  }
-
-  function onPointerMove(e) {
-    moveAwayFrom(e.clientX, e.clientY);
-  }
-
-  // Run hint cycle every 2s while on invite screen
-  cycleHint();
-  hintTimer = setInterval(cycleHint, 2000);
-
-  // Chase behavior
-  document.addEventListener("pointermove", onPointerMove);
-
-  // Prevent click/tap on No
-  const blockNo = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const x = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : btnX);
-    const y = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : btnY);
-    moveAwayFrom(x, y);
-  };
-
-  noBtn.addEventListener("click", blockNo);
-  noBtn.addEventListener("pointerdown", blockNo);
-  noBtn.addEventListener("touchstart", blockNo, { passive: false });
-
-  // Keep inside viewport on resize
-  window.addEventListener("resize", () => setNoPosition(btnX, btnY));
-
-  yesBtn.addEventListener("click", () => {
-    clearInterval(hintTimer);
     document.removeEventListener("pointermove", onPointerMove);
     hint.textContent = "";
     goTo("cuisine");
@@ -406,7 +346,7 @@ function populateReveal() {
     <div class="row"><dt>Where</dt><dd>${where}</dd></div>
   `;
 
-  // Only show this message (no extra "you picked..." line)
+  // Only keep the pickup note on final page
   $("#pickup-note").textContent = CONFIG.pickupNote;
 
   const dirLink = $("#directions-link");
@@ -557,8 +497,8 @@ async function submitAnswers() {
   if (jobs.length === 0) {
     console.warn(
       "No webhook configured — her answers were not sent anywhere. " +
-      "Set discordWebhookUrl or sheetsWebAppUrl in script.js before sharing this page. " +
-      "Answers:",
+        "Set discordWebhookUrl or sheetsWebAppUrl in script.js before sharing this page. " +
+        "Answers:",
       payload
     );
   }
