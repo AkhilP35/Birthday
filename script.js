@@ -265,10 +265,6 @@ function populateReveal() {
     <div class="row"><dt>Where</dt><dd>${where}</dd></div>
   `;
 
-  $("#pickup-note").textContent =
-    `${CONFIG.pickupNote}  ·  You picked ${state.cuisine || "something delicious"}, ${(
-      state.seating || "either"
-    ).toLowerCase()} seating.`;
 
   const dirLink = $("#directions-link");
   if (CONFIG.restaurantName || CONFIG.restaurantAddress) {
