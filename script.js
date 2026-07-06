@@ -186,35 +186,89 @@ function setupInviteButtons() {
     "Hmm, I don't believe you 😏",
     "Last chance to say yes... 💕",
   ];
-  let dodges = 0;
-  const MAX_DODGES = 4;
 
-  function dodge() {
-    if (dodges >= MAX_DODGES || reduceMotion) return;
-    const bounds = container.getBoundingClientRect();
-    const maxX = Math.max(bounds.width / 2 - 60, 40);
-    const x = (Math.random() * 2 - 1) * maxX;
-    const y = (Math.random() * 60 - 20);
-    noBtn.style.transform = `translate(${x}px, ${y}px)`;
-    hint.textContent = hints[Math.min(dodges, hints.length - 1)];
-    dodges++;
+  let hintIndex = 0;
+  let mouseX = null;
+  let mouseY = null;
+
+  function updateHint() {
+    if (!hint) return;
+    hint.textContent = hints[hintIndex % hints.length];
+    hintIndex++;
   }
 
-  noBtn.addEventListener("pointerenter", dodge);
-  noBtn.addEventListener("touchstart", (e) => {
-    if (dodges < MAX_DODGES) {
-      e.preventDefault(); // dodge away before the tap registers as a click
-      dodge();
-    }
-    // once dodges are used up, let the touch through so it can be tapped normally
-  }, { passive: false });
+  function moveNoAwayFromCursor() {
+    if (reduceMotion) return;
+    const bounds = container.getBoundingClientRect();
+    const noRect = noBtn.getBoundingClientRect();
 
-  noBtn.addEventListener("click", () => {
-    hint.textContent = "I knew you'd say yes eventually 😘";
-    setTimeout(() => goTo("cuisine"), 700);
+    const btnCenterX = noRect.left + noRect.width / 2;
+    const btnCenterY = noRect.top + noRect.height / 2;
+
+    let dirX = (btnCenterX - (mouseX ?? btnCenterX));
+    let dirY = (btnCenterY - (mouseY ?? btnCenterY));
+
+    const len = Math.hypot(dirX, dirY) || 1;
+    dirX /= len;
+    dirY /= len;
+
+    const step = 120;
+    const jitterX = (Math.random() * 24) - 12;
+    const jitterY = (Math.random() * 24) - 12;
+
+    const curMatch = noBtn.style.transform.match(/translate\((-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px\)/);
+    const currentX = curMatch ? parseFloat(curMatch[1]) : 0;
+    const currentY = curMatch ? parseFloat(curMatch[2]) : 0;
+
+    const targetX = currentX + dirX * step + jitterX;
+    const targetY = currentY + dirY * step + jitterY;
+
+    const maxX = Math.max(bounds.width / 2 - noRect.width / 2 - 8, 0);
+    const maxY = Math.max(bounds.height / 2 - noRect.height / 2 - 8, 0);
+
+    const clampedX = Math.min(maxX, Math.max(-maxX, targetX));
+    const clampedY = Math.min(maxY, Math.max(-maxY, targetY));
+
+    noBtn.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+  }
+
+  const onPointerMove = (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    moveNoAwayFromCursor();
+  };
+
+  container.addEventListener("pointermove", onPointerMove);
+
+  noBtn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    moveNoAwayFromCursor();
   });
 
+  noBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    moveNoAwayFromCursor();
+  });
+
+  noBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const touch = e.touches[0];
+    if (touch) {
+      mouseX = touch.clientX;
+      mouseY = touch.clientY;
+    }
+    moveNoAwayFromCursor();
+  }, { passive: false });
+
+  const hintTimer = setInterval(updateHint, 2000);
+  updateHint();
+
   yesBtn.addEventListener("click", () => {
+    clearInterval(hintTimer);
+    container.removeEventListener("pointermove", onPointerMove);
     hint.textContent = "";
     goTo("cuisine");
   });
@@ -265,6 +319,7 @@ function populateReveal() {
     <div class="row"><dt>Where</dt><dd>${where}</dd></div>
   `;
 
+  $("#pickup-note").textContent = CONFIG.pickupNote;
 
   const dirLink = $("#directions-link");
   if (CONFIG.restaurantName || CONFIG.restaurantAddress) {
