@@ -173,10 +173,7 @@ function setupDateInput() {
 }
 
 /* ============================================================
-   PLAYFUL "NO" BUTTON
-   - Starts next to Yes button
-   - Only moves when cursor enters trigger radius
-   - Moves opposite direction
+   PLAYFUL "NO" BUTTON (DEFAULT STABLE VERSION)
    ============================================================ */
 function setupInviteButtons() {
   const container = $("#invite-buttons");
@@ -192,17 +189,16 @@ function setupInviteButtons() {
   ];
 
   let hintIndex = 0;
-  const triggerRadius = 20; // px
-  const dodgeStep = 10; // px
-  const margin = 10; // viewport safe margin
-  let started = false;
+  const triggerRadius = 80; // px: cursor must be this close before No moves
+  const dodgeStep = 110; // px jump distance
+  const padding = 8; // keep No inside button container
+  let offsetX = 0;
+  let offsetY = 0;
 
-  // Start in normal flow beside yes button
-  noBtn.style.position = "relative";
-  noBtn.style.left = "0px";
-  noBtn.style.top = "0px";
-  noBtn.style.transform = "none";
-  noBtn.style.zIndex = "9999";
+  // Start next to Yes in normal layout
+  noBtn.style.transform = "translate(0px, 0px)";
+  noBtn.style.transition = "transform 120ms ease-out";
+  noBtn.style.zIndex = "2";
 
   function cycleHint() {
     hint.textContent = hints[hintIndex % hints.length];
@@ -212,80 +208,61 @@ function setupInviteButtons() {
   cycleHint();
   const hintTimer = setInterval(cycleHint, 2000);
 
-  function clampToViewport(centerX, centerY, rect) {
-    const halfW = rect.width / 2;
-    const halfH = rect.height / 2;
-
-    const minX = margin + halfW;
-    const maxX = window.innerWidth - margin - halfW;
-    const minY = margin + halfH;
-    const maxY = window.innerHeight - margin - halfH;
-
-    return {
-      x: Math.min(maxX, Math.max(minX, centerX)),
-      y: Math.min(maxY, Math.max(minY, centerY)),
-    };
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
   }
 
-  function ensureFixedAtCurrentSpot() {
-    if (started) return;
-    const rect = noBtn.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    noBtn.style.position = "fixed";
-    noBtn.style.left = `${centerX}px`;
-    noBtn.style.top = `${centerY}px`;
-    noBtn.style.transform = "translate(-50%, -50%)";
-    started = true;
-  }
-
-  function dodgeFrom(cursorX, cursorY) {
+  function dodgeIfNeeded(cursorX, cursorY) {
     if (reduceMotion) return;
 
-    ensureFixedAtCurrentSpot();
+    const cRect = container.getBoundingClientRect();
+    const bRect = noBtn.getBoundingClientRect();
 
-    const rect = noBtn.getBoundingClientRect();
-    const btnX = rect.left + rect.width / 2;
-    const btnY = rect.top + rect.height / 2;
+    const btnCenterX = bRect.left + bRect.width / 2;
+    const btnCenterY = bRect.top + bRect.height / 2;
 
-    const dx = btnX - cursorX;
-    const dy = btnY - cursorY;
+    const dx = btnCenterX - cursorX;
+    const dy = btnCenterY - cursorY;
     const dist = Math.hypot(dx, dy);
 
-    // Move ONLY if cursor is inside radius
+    // Only move if cursor is inside radius
     if (dist > triggerRadius) return;
 
     const nx = (dx || 1) / (dist || 1);
-    const ny = (dy || 1) / (dist || 1);
+    const ny = (dy || 0.3) / (dist || 1);
 
-    const jitterX = Math.random() * 30 - 15;
-    const jitterY = Math.random() * 30 - 15;
+    const nextX = offsetX + nx * dodgeStep + (Math.random() * 20 - 10);
+    const nextY = offsetY + ny * dodgeStep + (Math.random() * 14 - 7);
 
-    const target = clampToViewport(
-      btnX + nx * dodgeStep + jitterX,
-      btnY + ny * dodgeStep + jitterY,
-      rect
-    );
+    // Base position of No in container coordinates (without current transform)
+    const baseLeftInContainer = bRect.left - cRect.left - offsetX;
+    const baseTopInContainer = bRect.top - cRect.top - offsetY;
 
-    noBtn.style.left = `${target.x}px`;
-    noBtn.style.top = `${target.y}px`;
+    // Clamp translated No so it remains visible and never "disappears"
+    const minOffsetX = padding - baseLeftInContainer;
+    const maxOffsetX = cRect.width - bRect.width - padding - baseLeftInContainer;
+    const minOffsetY = padding - baseTopInContainer;
+    const maxOffsetY = cRect.height - bRect.height - padding - baseTopInContainer;
+
+    offsetX = clamp(nextX, minOffsetX, maxOffsetX);
+    offsetY = clamp(nextY, minOffsetY, maxOffsetY);
+
+    noBtn.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
   }
 
   function onPointerMove(e) {
-    dodgeFrom(e.clientX, e.clientY);
+    dodgeIfNeeded(e.clientX, e.clientY);
   }
 
   container.addEventListener("pointermove", onPointerMove);
-  document.addEventListener("pointermove", onPointerMove);
 
-  // Prevent clicking no
+  // Prevent clicking No
   const blockNo = (e) => {
     e.preventDefault();
     e.stopPropagation();
     const x = e.clientX ?? (e.touches?.[0]?.clientX ?? window.innerWidth / 2);
     const y = e.clientY ?? (e.touches?.[0]?.clientY ?? window.innerHeight / 2);
-    dodgeFrom(x, y);
+    dodgeIfNeeded(x, y);
   };
 
   noBtn.addEventListener("pointerdown", blockNo);
@@ -295,7 +272,6 @@ function setupInviteButtons() {
   yesBtn.addEventListener("click", () => {
     clearInterval(hintTimer);
     container.removeEventListener("pointermove", onPointerMove);
-    document.removeEventListener("pointermove", onPointerMove);
     hint.textContent = "";
     goTo("cuisine");
   });
@@ -346,7 +322,7 @@ function populateReveal() {
     <div class="row"><dt>Where</dt><dd>${where}</dd></div>
   `;
 
-  // Only keep the pickup note on final page
+  // Final page: only pickup note message
   $("#pickup-note").textContent = CONFIG.pickupNote;
 
   const dirLink = $("#directions-link");
