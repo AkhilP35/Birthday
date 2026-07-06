@@ -320,7 +320,7 @@ function parseTimeToHM(timeStr) {
 
 function populateReveal() {
   const details = $("#ticket-details");
-  const where = CONFIG.restaurantName || "my little secret 🤫";
+  const where = CONFIG.restaurantName || "surprise!!";
   details.innerHTML = `
     <div class="row"><dt>Date</dt><dd>${formatDatePretty(state.date)}</dd></div>
     <div class="row"><dt>Time</dt><dd>${state.time || "—"}</dd></div>
