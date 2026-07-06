@@ -206,7 +206,13 @@ function setupInviteButtons() {
   }
 
   cycleHint();
-  const hintTimer = setInterval(cycleHint, 2000);
+   const hintTimer = setInterval(() => {
+     if (hintIndex >= hints.length) {
+       clearInterval(hintTimer); // stop after showing each hint once
+       return;
+     }
+     cycleHint();
+   }, 2000);
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
