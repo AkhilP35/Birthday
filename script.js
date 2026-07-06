@@ -173,13 +173,13 @@ function setupDateInput() {
 }
 
 /* ============================================================
-   PLAYFUL "NO" BUTTON
+   PLAYFUL "NO" BUTTON (FULL-SCREEN DODGE)
    ============================================================ */
 function setupInviteButtons() {
-  const container = $("#invite-buttons");
   const noBtn = $("#no-btn");
   const yesBtn = $("#yes-btn");
   const hint = $("#invite-hint");
+
   const hints = [
     "It's okay, take your time 😉",
     "Are you sure about that? 🥺",
@@ -187,88 +187,95 @@ function setupInviteButtons() {
     "Last chance to say yes... 💕",
   ];
 
-  let hintIndex = 0;
-  let mouseX = null;
-  let mouseY = null;
+  // Make it unclickable and roam anywhere in viewport
+  noBtn.style.position = "fixed";
+  noBtn.style.zIndex = "9999";
+  noBtn.style.left = "50%";
+  noBtn.style.top = "70%";
+  noBtn.style.transform = "translate(-50%, -50%)";
+  noBtn.style.willChange = "left, top, transform";
 
-  function updateHint() {
-    if (!hint) return;
+  let hintIndex = 0;
+  let hintTimer = null;
+  let btnX = window.innerWidth * 0.5;
+  let btnY = window.innerHeight * 0.7;
+  const margin = 12;
+
+  function setNoPosition(x, y) {
+    const rect = noBtn.getBoundingClientRect();
+    const halfW = rect.width / 2;
+    const halfH = rect.height / 2;
+
+    const minX = margin + halfW;
+    const maxX = window.innerWidth - margin - halfW;
+    const minY = margin + halfH;
+    const maxY = window.innerHeight - margin - halfH;
+
+    btnX = Math.min(maxX, Math.max(minX, x));
+    btnY = Math.min(maxY, Math.max(minY, y));
+
+    noBtn.style.left = `${btnX}px`;
+    noBtn.style.top = `${btnY}px`;
+    noBtn.style.transform = "translate(-50%, -50%)";
+  }
+
+  function moveAwayFrom(pointerX, pointerY) {
+    if (reduceMotion) return;
+
+    const dx = btnX - pointerX;
+    const dy = btnY - pointerY;
+    const dist = Math.hypot(dx, dy) || 1;
+
+    // Normalize direction away from cursor
+    const nx = dx / dist;
+    const ny = dy / dist;
+
+    // Big jump + jitter so it can move all around the screen
+    const jump = 140;
+    const jitterX = (Math.random() * 120) - 60;
+    const jitterY = (Math.random() * 120) - 60;
+
+    const nextX = btnX + nx * jump + jitterX;
+    const nextY = btnY + ny * jump + jitterY;
+
+    setNoPosition(nextX, nextY);
+  }
+
+  function cycleHint() {
     hint.textContent = hints[hintIndex % hints.length];
     hintIndex++;
   }
 
-  function moveNoAwayFromCursor() {
-    if (reduceMotion) return;
-    const bounds = container.getBoundingClientRect();
-    const noRect = noBtn.getBoundingClientRect();
-
-    const btnCenterX = noRect.left + noRect.width / 2;
-    const btnCenterY = noRect.top + noRect.height / 2;
-
-    let dirX = (btnCenterX - (mouseX ?? btnCenterX));
-    let dirY = (btnCenterY - (mouseY ?? btnCenterY));
-
-    const len = Math.hypot(dirX, dirY) || 1;
-    dirX /= len;
-    dirY /= len;
-
-    const step = 120;
-    const jitterX = (Math.random() * 24) - 12;
-    const jitterY = (Math.random() * 24) - 12;
-
-    const curMatch = noBtn.style.transform.match(/translate\((-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px\)/);
-    const currentX = curMatch ? parseFloat(curMatch[1]) : 0;
-    const currentY = curMatch ? parseFloat(curMatch[2]) : 0;
-
-    const targetX = currentX + dirX * step + jitterX;
-    const targetY = currentY + dirY * step + jitterY;
-
-    const maxX = Math.max(bounds.width / 2 - noRect.width / 2 - 8, 0);
-    const maxY = Math.max(bounds.height / 2 - noRect.height / 2 - 8, 0);
-
-    const clampedX = Math.min(maxX, Math.max(-maxX, targetX));
-    const clampedY = Math.min(maxY, Math.max(-maxY, targetY));
-
-    noBtn.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+  function onPointerMove(e) {
+    moveAwayFrom(e.clientX, e.clientY);
   }
 
-  const onPointerMove = (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    moveNoAwayFromCursor();
+  // Run hint cycle every 2s while on invite screen
+  cycleHint();
+  hintTimer = setInterval(cycleHint, 2000);
+
+  // Chase behavior
+  document.addEventListener("pointermove", onPointerMove);
+
+  // Prevent click/tap on No
+  const blockNo = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const x = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : btnX);
+    const y = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : btnY);
+    moveAwayFrom(x, y);
   };
 
-  container.addEventListener("pointermove", onPointerMove);
+  noBtn.addEventListener("click", blockNo);
+  noBtn.addEventListener("pointerdown", blockNo);
+  noBtn.addEventListener("touchstart", blockNo, { passive: false });
 
-  noBtn.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    moveNoAwayFromCursor();
-  });
-
-  noBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    moveNoAwayFromCursor();
-  });
-
-  noBtn.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const touch = e.touches[0];
-    if (touch) {
-      mouseX = touch.clientX;
-      mouseY = touch.clientY;
-    }
-    moveNoAwayFromCursor();
-  }, { passive: false });
-
-  const hintTimer = setInterval(updateHint, 2000);
-  updateHint();
+  // Keep inside viewport on resize
+  window.addEventListener("resize", () => setNoPosition(btnX, btnY));
 
   yesBtn.addEventListener("click", () => {
     clearInterval(hintTimer);
-    container.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointermove", onPointerMove);
     hint.textContent = "";
     goTo("cuisine");
   });
@@ -319,6 +326,7 @@ function populateReveal() {
     <div class="row"><dt>Where</dt><dd>${where}</dd></div>
   `;
 
+  // Only show this message (no extra "you picked..." line)
   $("#pickup-note").textContent = CONFIG.pickupNote;
 
   const dirLink = $("#directions-link");
