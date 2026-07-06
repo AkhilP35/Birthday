@@ -192,8 +192,8 @@ function setupInviteButtons() {
   ];
 
   let hintIndex = 0;
-  const triggerRadius = 100; // px
-  const dodgeStep = 140; // px
+  const triggerRadius = 60; // px
+  const dodgeStep = 70; // px
   const margin = 10; // viewport safe margin
   let started = false;
 
