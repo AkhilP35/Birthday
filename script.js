@@ -8,16 +8,6 @@ const CONFIG = {
     "wanted to do something a bit more creative for your birthday this " +
     "year. So I built you this...",
 
-  // Our story — replace the emoji + caption with real photos if you like.
-  // To use a real photo instead of an emoji, swap the <span class="emoji">
-  // line in renderMemories() below for: <img src="your-photo.jpg" alt="">
-  memories: [
-    { emoji: "📸", caption: "The day we met" },
-    { emoji: "✈️", caption: "That trip we took" },
-    { emoji: "🎉", caption: "My favourite memory of us" },
-    { emoji: "❤️", caption: "Today... and what's next" },
-  ],
-
   // Leave restaurant blank if you want it to stay a surprise until dinner —
   // it will simply say "my little secret" on the ticket.
   restaurantName: "", // e.g. "Bella Notte"
@@ -58,7 +48,6 @@ function currentScreenEl() {
 }
 
 function goTo(name) {
-  if (name === "memories") name = "invite";
   const next = $(`.screen[data-screen="${name}"]`);
   const current = currentScreenEl();
   if (!next || next === current) return;
@@ -185,17 +174,17 @@ function setupInviteButtons() {
   const hints = [
     "It's okay, take your time 😉",
     "Are you sure about that? 🥺",
+    "Hmm, I don't believe you 😏",
     "Last chance to say yes... 💕",
   ];
 
   let hintIndex = 0;
-  const triggerRadius = 80; // px: cursor must be this close before No moves
-  const dodgeStep = 110; // px jump distance
-  const padding = 8; // keep No inside button container
+  const triggerRadius = 80;
+  const dodgeStep = 110;
+  const padding = 8;
   let offsetX = 0;
   let offsetY = 0;
 
-  // Start next to Yes in normal layout
   noBtn.style.transform = "translate(0px, 0px)";
   noBtn.style.transition = "transform 120ms ease-out";
   noBtn.style.zIndex = "2";
@@ -206,13 +195,13 @@ function setupInviteButtons() {
   }
 
   cycleHint();
-   const hintTimer = setInterval(() => {
-     if (hintIndex >= hints.length) {
-       clearInterval(hintTimer); // stop after showing each hint once
-       return;
-     }
-     cycleHint();
-   }, 2000);
+  const hintTimer = setInterval(() => {
+    if (hintIndex >= hints.length) {
+      clearInterval(hintTimer);
+      return;
+    }
+    cycleHint();
+  }, 2000);
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -231,7 +220,6 @@ function setupInviteButtons() {
     const dy = btnCenterY - cursorY;
     const dist = Math.hypot(dx, dy);
 
-    // Only move if cursor is inside radius
     if (dist > triggerRadius) return;
 
     const nx = (dx || 1) / (dist || 1);
@@ -240,11 +228,9 @@ function setupInviteButtons() {
     const nextX = offsetX + nx * dodgeStep + (Math.random() * 20 - 10);
     const nextY = offsetY + ny * dodgeStep + (Math.random() * 14 - 7);
 
-    // Base position of No in container coordinates (without current transform)
     const baseLeftInContainer = bRect.left - cRect.left - offsetX;
     const baseTopInContainer = bRect.top - cRect.top - offsetY;
 
-    // Clamp translated No so it remains visible and never "disappears"
     const minOffsetX = padding - baseLeftInContainer;
     const maxOffsetX = cRect.width - bRect.width - padding - baseLeftInContainer;
     const minOffsetY = padding - baseTopInContainer;
@@ -262,7 +248,6 @@ function setupInviteButtons() {
 
   container.addEventListener("pointermove", onPointerMove);
 
-  // Prevent clicking No
   const blockNo = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -280,20 +265,6 @@ function setupInviteButtons() {
     container.removeEventListener("pointermove", onPointerMove);
     hint.textContent = "";
     goTo("cuisine");
-  });
-}
-
-/* ============================================================
-   MEMORIES
-   ============================================================ */
-function renderMemories() {
-  const wrap = $("#memories");
-  CONFIG.memories.forEach((m, i) => {
-    const tile = document.createElement("div");
-    tile.className = "memory-tile";
-    tile.style.animationDelay = i * 0.15 + "s";
-    tile.innerHTML = `<span class="emoji">${m.emoji}</span><p>${m.caption}</p>`;
-    wrap.appendChild(tile);
   });
 }
 
@@ -320,7 +291,7 @@ function parseTimeToHM(timeStr) {
 
 function populateReveal() {
   const details = $("#ticket-details");
-  const where = CONFIG.restaurantName || "surprise!!";
+  const where = CONFIG.restaurantName || "my little secret 🤫";
   details.innerHTML = `
     <div class="row"><dt>Date</dt><dd>${formatDatePretty(state.date)}</dd></div>
     <div class="row"><dt>Time</dt><dd>${state.time || "—"}</dd></div>
@@ -328,7 +299,6 @@ function populateReveal() {
     <div class="row"><dt>Where</dt><dd>${where}</dd></div>
   `;
 
-  // Final page: only pickup note message
   $("#pickup-note").textContent = CONFIG.pickupNote;
 
   const dirLink = $("#directions-link");
@@ -469,7 +439,7 @@ async function submitAnswers() {
     jobs.push(
       fetch(CONFIG.sheetsWebAppUrl, {
         method: "POST",
-        mode: "no-cors", // Apps Script web apps usually need this from the browser
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).catch((err) => console.warn("Sheets webhook failed:", err))
@@ -505,7 +475,6 @@ function setupSendButton() {
 function init() {
   typewrite($("#cover-title"), `Happy Birthday ${CONFIG.girlfriendName} ❤️`);
   $("#message-text").textContent = CONFIG.personalMessage;
-  renderMemories();
   spawnHearts();
   setupSelectable('[data-question="cuisine"]');
   setupSelectable('[data-question="time"]');
