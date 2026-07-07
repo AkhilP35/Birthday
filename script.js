@@ -174,7 +174,6 @@ function setupInviteButtons() {
   const hints = [
     "It's okay, take your time 😉",
     "Are you sure about that? 🥺",
-    "Hmm, I don't believe you 😏",
     "Last chance to say yes... 💕",
   ];
 
