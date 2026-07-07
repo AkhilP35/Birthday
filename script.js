@@ -58,6 +58,7 @@ function currentScreenEl() {
 }
 
 function goTo(name) {
+  if (name === "memories") name = "invite";
   const next = $(`.screen[data-screen="${name}"]`);
   const current = currentScreenEl();
   if (!next || next === current) return;
