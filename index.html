@@ -1,152 +1,161 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Happy Birthday ❤️</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Birthday Invite ❤️</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <canvas id="confetti-canvas"></canvas>
+  <div class="hearts" id="hearts" aria-hidden="true"></div>
 
-<div id="bg" aria-hidden="true">
-  <div class="blob blob1"></div>
-  <div class="blob blob2"></div>
-  <div class="blob blob3"></div>
-  <div id="hearts"></div>
-</div>
-<canvas id="confetti-canvas" aria-hidden="true"></canvas>
+  <main class="app-shell">
 
-<div class="progress" id="progress" aria-hidden="true"><span id="progress-fill"></span></div>
-
-<main id="app">
-
-  <section class="screen active" data-screen="cover">
-    <div class="cover-inner">
-      <h1 id="cover-title" class="display-xl"></h1>
-      <p class="sub">I made a website just for you...</p>
-      <button class="btn btn-primary" data-next="message">Open <span class="arrow">→</span></button>
+    <div class="progress" id="progress" aria-hidden="true">
+      <span id="progress-fill"></span>
     </div>
-  </section>
 
-  <section class="screen" data-screen="message">
-    <div class="glass-card message-card">
-      <p class="eyebrow">before we start</p>
-      <p id="message-text" class="message-text"></p>
-      <button class="btn btn-primary" data-next="invite">Continue <span class="arrow">→</span></button>
-    </div>
-  </section>
-
-
-  <section class="screen" data-screen="invite">
-    <div class="glass-card invite-card">
-      <h2 class="display-lg">Will you go on a birthday dinner date with me?</h2>
-      <p class="sub">Try click no just for fun</p>
-      <div class="invite-buttons" id="invite-buttons">
-        <button class="btn btn-primary btn-lg" id="yes-btn">💖 Yes</button>
-        <button class="btn btn-ghost no-btn" id="no-btn">🙈 No</button>
+    <!-- Cover -->
+    <section class="screen active" data-screen="cover">
+      <div class="glass-card center">
+        <p class="eyebrow">A little surprise for you</p>
+        <h1 class="display-xl" id="cover-title">Happy Birthday ❤️</h1>
+        <p class="lead" id="message-text"></p>
+        <button class="btn btn-primary" data-next="intro">
+          Open it <span class="arrow">→</span>
+        </button>
       </div>
-      <p class="invite-hint" id="invite-hint">&nbsp;</p>
-    </div>
-  </section>
+    </section>
 
-  <section class="screen question-screen" data-screen="cuisine">
-    <div class="glass-card">
-      <p class="q-label">Question 1 of 5</p>
-      <h2 class="display-md">What are you craving?</h2>
-      <div class="card-grid" data-question="cuisine">
-        <button class="option-card" data-value="Italian"><span class="emoji">🍝</span><span>Italian</span></button>
-        <button class="option-card" data-value="Japanese"><span class="emoji">🍣</span><span>Japanese</span></button>
-        <button class="option-card" data-value="Indian"><span class="emoji">🍛</span><span>Indian</span></button>
-        <button class="option-card" data-value="Mexican"><span class="emoji">🌮</span><span>Mexican</span></button>
-        <button class="option-card" data-value="Surprise me"><span class="emoji">🎁</span><span>Surprise me</span></button>
+    <!-- Intro -->
+    <section class="screen" data-screen="intro">
+      <div class="glass-card center">
+        <p class="eyebrow">Before we start</p>
+        <h2 class="display-lg">I have a question for you…</h2>
+        <p class="lead">Would you go on a birthday date with me?</p>
+        <button class="btn btn-primary" data-next="invite">
+          Before we start <span class="arrow">→</span>
+        </button>
       </div>
-      <button class="btn btn-primary" disabled data-next="date">Continue <span class="arrow">→</span></button>
-    </div>
-  </section>
+    </section>
 
-  <section class="screen question-screen" data-screen="date">
-    <div class="glass-card">
-      <p class="q-label">Question 2 of 5</p>
-      <h2 class="display-md">When are you free?</h2>
-      <input type="date" id="date-input" class="date-input" aria-label="Pick a date" />
-      <button class="btn btn-primary" disabled data-next="time">Continue <span class="arrow">→</span></button>
-    </div>
-  </section>
+    <!-- Invite -->
+    <section class="screen" data-screen="invite">
+      <div class="glass-card center">
+        <p class="eyebrow">The big question</p>
+        <h2 class="display-lg">Will you come out with me? 💌</h2>
+        <p id="invite-hint" class="invite-hint"></p>
 
-  <section class="screen question-screen" data-screen="time">
-    <div class="glass-card">
-      <p class="q-label">Question 3 of 5</p>
-      <h2 class="display-md">What time works?</h2>
-      <div class="pill-row" data-question="time">
-        <button class="pill" data-value="6:00 PM">6:00 PM</button>
-        <button class="pill" data-value="7:00 PM">7:00 PM</button>
-        <button class="pill" data-value="7:30 PM">7:30 PM</button>
-        <button class="pill" data-value="8:00 PM">8:00 PM</button>
-        <button class="pill" data-value="Surprise me">Surprise me</button>
-      </div>
-      <button class="btn btn-primary" disabled data-next="dress">Continue <span class="arrow">→</span></button>
-    </div>
-  </section>
-
-  <section class="screen question-screen" data-screen="dress">
-    <div class="glass-card">
-      <p class="q-label">Question 4 of 5</p>
-      <h2 class="display-md">Dress code?</h2>
-      <div class="card-grid" data-question="dressCode">
-        <button class="option-card" data-value="Fancy"><span class="emoji">👗</span><span>Fancy</span></button>
-        <button class="option-card" data-value="Casual"><span class="emoji">😊</span><span>Casual</span></button>
-        <button class="option-card" data-value="Surprise me"><span class="emoji">✨</span><span>Surprise me</span></button>
-      </div>
-      <button class="btn btn-primary" disabled data-next="seating">Continue <span class="arrow">→</span></button>
-    </div>
-  </section>
-
-  <section class="screen question-screen" data-screen="seating">
-    <div class="glass-card">
-      <p class="q-label">Question 5 of 5</p>
-      <h2 class="display-md">Indoor or outdoor?</h2>
-      <div class="card-grid" data-question="seating">
-        <button class="option-card" data-value="Indoor"><span class="emoji">🏠</span><span>Indoor</span></button>
-        <button class="option-card" data-value="Outdoor"><span class="emoji">🌤</span><span>Outdoor</span></button>
-        <button class="option-card" data-value="I don't mind"><span class="emoji">🤷</span><span>I don't mind</span></button>
-      </div>
-      <button class="btn btn-primary" disabled data-next="reveal" id="finish-btn">See our date <span class="arrow">→</span></button>
-    </div>
-  </section>
-
-  <section class="screen" data-screen="reveal">
-    <div class="reveal-wrap">
-      <h2 class="display-xl">It's a date ❤️</h2>
-      <div class="ticket" id="ticket">
-        <div class="ticket-main">
-          <p class="ticket-eyebrow">Admit one ❤️</p>
-          <dl class="ticket-details" id="ticket-details"></dl>
+        <div class="invite-buttons" id="invite-buttons">
+          <button class="btn btn-primary" id="yes-btn">Yes ❤️</button>
+          <button class="btn btn-ghost" id="no-btn">No 🙈</button>
         </div>
-        <div class="ticket-perf"></div>
-        <div class="ticket-stub">
-          <p class="stub-label">Counting down</p>
-          <div class="countdown" id="countdown">
-            <div><span id="cd-d">00</span><small>days</small></div>
-            <div><span id="cd-h">00</span><small>hrs</small></div>
-            <div><span id="cd-m">00</span><small>min</small></div>
-            <div><span id="cd-s">00</span><small>sec</small></div>
+      </div>
+    </section>
+
+    <!-- Q1 -->
+    <section class="screen question-screen" data-screen="cuisine">
+      <div class="glass-card">
+        <p class="q-label">Question 1 of 5</p>
+        <h2 class="display-md">What are you craving?</h2>
+        <div class="card-grid" data-question="cuisine">
+          <button class="option-card" data-value="Italian"><span class="emoji">🍝</span><span>Italian</span></button>
+          <button class="option-card" data-value="Japanese"><span class="emoji">🍣</span><span>Japanese</span></button>
+          <button class="option-card" data-value="Steak"><span class="emoji">🥩</span><span>Steak</span></button>
+          <button class="option-card" data-value="Surprise me"><span class="emoji">✨</span><span>Surprise me</span></button>
+        </div>
+        <button class="btn btn-primary" disabled data-next="date">Continue <span class="arrow">→</span></button>
+      </div>
+    </section>
+
+    <!-- Q2 -->
+    <section class="screen question-screen" data-screen="date">
+      <div class="glass-card">
+        <p class="q-label">Question 2 of 5</p>
+        <h2 class="display-md">Pick a date</h2>
+        <input id="date-input" type="date" class="date-input" />
+        <button class="btn btn-primary" disabled data-next="time">Continue <span class="arrow">→</span></button>
+      </div>
+    </section>
+
+    <!-- Q3 -->
+    <section class="screen question-screen" data-screen="time">
+      <div class="glass-card">
+        <p class="q-label">Question 3 of 5</p>
+        <h2 class="display-md">What time works best?</h2>
+        <div class="card-grid" data-question="time">
+          <button class="option-card" data-value="6:00 PM"><span class="emoji">🕕</span><span>6:00 PM</span></button>
+          <button class="option-card" data-value="7:00 PM"><span class="emoji">🕖</span><span>7:00 PM</span></button>
+          <button class="option-card" data-value="8:00 PM"><span class="emoji">🕗</span><span>8:00 PM</span></button>
+          <button class="option-card" data-value="Surprise me"><span class="emoji">🌙</span><span>Surprise me</span></button>
+        </div>
+        <button class="btn btn-primary" disabled data-next="dress">Continue <span class="arrow">→</span></button>
+      </div>
+    </section>
+
+    <!-- Q4 -->
+    <section class="screen question-screen" data-screen="dress">
+      <div class="glass-card">
+        <p class="q-label">Question 4 of 5</p>
+        <h2 class="display-md">Dress code?</h2>
+        <div class="card-grid" data-question="dressCode">
+          <button class="option-card" data-value="Fancy"><span class="emoji">👗</span><span>Fancy</span></button>
+          <button class="option-card" data-value="Casual"><span class="emoji">😊</span><span>Casual</span></button>
+          <button class="option-card" data-value="Surprise me"><span class="emoji">✨</span><span>Surprise me</span></button>
+        </div>
+        <button class="btn btn-primary" disabled data-next="seating">Continue <span class="arrow">→</span></button>
+      </div>
+    </section>
+
+    <!-- Q5 -->
+    <section class="screen question-screen" data-screen="seating">
+      <div class="glass-card">
+        <p class="q-label">Question 5 of 5</p>
+        <h2 class="display-md">Indoor or outdoor?</h2>
+        <div class="card-grid" data-question="seating">
+          <button class="option-card" data-value="Indoor"><span class="emoji">🏠</span><span>Indoor</span></button>
+          <button class="option-card" data-value="Outdoor"><span class="emoji">🌤</span><span>Outdoor</span></button>
+          <button class="option-card" data-value="Either"><span class="emoji">🤷</span><span>Either</span></button>
+        </div>
+        <button class="btn btn-primary" disabled data-next="reveal" id="finish-btn">See our date <span class="arrow">→</span></button>
+      </div>
+    </section>
+
+    <!-- Reveal -->
+    <section class="screen" data-screen="reveal">
+      <div class="reveal-wrap">
+        <h2 class="display-xl">It's a date ❤️</h2>
+        <div class="ticket" id="ticket">
+          <div class="ticket-main">
+            <p class="ticket-eyebrow">Admit one ❤️</p>
+            <dl class="ticket-details" id="ticket-details"></dl>
+          </div>
+          <div class="ticket-perf"></div>
+          <div class="ticket-stub">
+            <p class="stub-label">Counting down</p>
+            <div class="countdown" id="countdown">
+              <div><span id="cd-d">00</span><small>days</small></div>
+              <div><span id="cd-h">00</span><small>hrs</small></div>
+              <div><span id="cd-m">00</span><small>min</small></div>
+              <div><span id="cd-s">00</span><small>sec</small></div>
+            </div>
           </div>
         </div>
+        <p class="pickup-note" id="pickup-note"></p>
+        <div class="reveal-actions">
+          <a id="directions-link" class="btn btn-ghost" target="_blank" rel="noopener">Get directions</a>
+          <button class="btn btn-primary" id="send-btn">Save my answer 💌</button>
+        </div>
+        <p class="send-status" id="send-status" aria-live="polite">&nbsp;</p>
       </div>
-      <p class="pickup-note" id="pickup-note"></p>
-      <div class="reveal-actions">
-        <a id="directions-link" class="btn btn-ghost" target="_blank" rel="noopener">Get directions</a>
-        <button class="btn btn-primary" id="send-btn">Save my answer 💌</button>
-      </div>
-      <p class="send-status" id="send-status" aria-live="polite">&nbsp;</p>
-    </div>
-  </section>
+    </section>
 
-</main>
+  </main>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
