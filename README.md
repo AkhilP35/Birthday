@@ -1,7 +1,11 @@
 # Her Birthday Date Website 💌
 
-A single-page, no-build website: welcome screen → personal message → a
-little "our story" section → date invitation → four quick questions →
+_____
+# CLICK HERE FOR THE WEBSITE: 
+https://akhilp35.github.io/Girlfriend-Birthday-Date-Picker-Website/ 
+______
+
+A single-page, no-build website: welcome screen → personal message → date invitation → four quick questions →
 a confetti reveal with a countdown to the actual date.
 
 It's plain HTML/CSS/JS on purpose — no npm install, no build step, so
